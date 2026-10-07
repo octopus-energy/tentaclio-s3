@@ -7,7 +7,7 @@ name = "tentaclio-s3"
 version = "0.0.3"
 description = "A python project containing all the dependencies for schema s3 for tentaclio."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     {name = "Octopus Energy", email = "nerds@octopus.energy"}
@@ -17,9 +17,11 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "tentaclio",
@@ -37,7 +39,7 @@ dev = [
     "isort>=5.11.2",
     "mypy",
     "twine",
-    "moto~=4.0.12",
+    "moto[s3]>=5",
 ]
 
 [tool.setuptools.packages.find]
@@ -46,7 +48,7 @@ include = ["*tentaclio_s3*"]
 
 [tool.black]
 line-length = 99
-target_version = ['py37']
+target_version = ['py310', 'py311', 'py312', 'py313', 'py314']
 include = '\.pyi?$'
 exclude = '(\.mypy_cache)'
 
