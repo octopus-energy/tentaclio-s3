@@ -8,10 +8,15 @@ version: 2.1
 
 executors:
   standard:
+    parameters:
+      python_version:
+        type: string
+        default: "3.14"
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:<< parameters.python_version >>
         environment:
           TENTACLIO__CONN__S3_TEST: s3://public_key:private_key@tentaclio-bucket
+          UV_PYTHON: << parameters.python_version >>
     working_directory: "~/lib"
 
 # -----------------
@@ -35,77 +40,78 @@ commands:
             - source-{{ .Branch }}-{{ .Revision }}
             - source-{{ .Branch }}-
             - source-
-      - checkout
+      - checkout:
+          method: full
       - save_cache:
           key: source-{{ .Branch }}-{{ .Revision }}
           paths:
             - "./.git"
 
   update_virtualenv:
+    parameters:
+      python_version:
+        type: string
     steps:
+      - restore_cache:
+          keys:
+            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-
       - configure_github
-      - run:
-          name: Install uv
-          command: curl -LsSf https://astral.sh/uv/install.sh | sh && echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
       - run:
           name: Install Python packages
           command: make sync
       - save_cache:
-          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+          key: virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
           paths:
             - "./.venv"
 
 jobs:
   lint:
-    executor: standard
+    parameters:
+      python_version:
+        default: "3.14"
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run Python linter
           command: make lint
 
   unit:
-    executor: standard
+    parameters:
+      python_version:
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run Python unit tests
           command: make unit
 
   functional:
-    executor: standard
+    parameters:
+      python_version:
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run s3 functional tests
           command: make functional
-
-  release:
-    executor: standard
-    steps:
-      - checkout_source
-      - update_virtualenv
-      - restore_cache:
-          keys:
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-
-      - run:
-          name: Verify git tag vs. version
-          command: uv run python scripts/verify_version.py
-      - run:
-          name: Init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = octoenergy" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: Create release
-          command: |
-            make release
 
 workflows:
   version: 2
@@ -117,21 +123,18 @@ workflows:
             tags:
               only: /.*/
       - unit:
+          name: unit-py<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
           filters:
             tags:
               only: /.*/
       - functional:
+          name: functional-py<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
           filters:
             tags:
               only: /.*/
-      - release:
-          requires:
-            - lint
-            - unit
-            - functional
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*(-alpha\.[0-9]+)?/
-            branches:
-              ignore: /.*/
-          context: TENTACLIO
