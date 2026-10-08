@@ -8,10 +8,15 @@ version: 2.1
 
 executors:
   standard:
+    parameters:
+      python_version:
+        type: string
+        default: "3.14"
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:<< parameters.python_version >>
         environment:
           TENTACLIO__CONN__S3_TEST: s3://public_key:private_key@tentaclio-bucket
+          UV_PYTHON: << parameters.python_version >>
     working_directory: "~/lib"
 
 # -----------------
@@ -51,7 +56,7 @@ commands:
           name: Install Python packages
           command: make sync
       - save_cache:
-          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+          key: virtualenv-{{ .Environment.CACHE_VERSION }}-{{ .Environment.UV_PYTHON }}-{{ .Branch }}-{{ checksum "uv.lock" }}
           paths:
             - "./.venv"
 
@@ -66,7 +71,12 @@ jobs:
           command: make lint
 
   unit:
-    executor: standard
+    parameters:
+      python_version:
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
       - update_virtualenv
@@ -75,7 +85,12 @@ jobs:
           command: make unit
 
   functional:
-    executor: standard
+    parameters:
+      python_version:
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
       - update_virtualenv
@@ -117,10 +132,18 @@ workflows:
             tags:
               only: /.*/
       - unit:
+          name: unit-py<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
           filters:
             tags:
               only: /.*/
       - functional:
+          name: functional-py<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
           filters:
             tags:
               only: /.*/
