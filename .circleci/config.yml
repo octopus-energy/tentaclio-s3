@@ -68,10 +68,17 @@ commands:
 
 jobs:
   lint:
-    executor: standard
+    parameters:
+      python_version:
+        default: "3.14"
+        type: string
+    executor:
+      name: standard
+      python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run Python linter
           command: make lint
@@ -85,7 +92,8 @@ jobs:
       python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run Python unit tests
           command: make unit
@@ -99,7 +107,8 @@ jobs:
       python_version: << parameters.python_version >>
     steps:
       - checkout_source
-      - update_virtualenv
+      - update_virtualenv:
+          python_version: << parameters.python_version >>
       - run:
           name: Run s3 functional tests
           command: make functional
