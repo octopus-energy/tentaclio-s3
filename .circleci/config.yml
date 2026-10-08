@@ -104,30 +104,6 @@ jobs:
           name: Run s3 functional tests
           command: make functional
 
-  release:
-    executor: standard
-    steps:
-      - checkout_source
-      - update_virtualenv
-      - restore_cache:
-          keys:
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
-            - pip-cache-{{ .Environment.CACHE_VERSION }}-
-      - run:
-          name: Verify git tag vs. version
-          command: uv run python scripts/verify_version.py
-      - run:
-          name: Init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = octoenergy" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-      - run:
-          name: Create release
-          command: |
-            make release
-
 workflows:
   version: 2
 
@@ -153,14 +129,3 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - release:
-          requires:
-            - lint
-            - unit
-            - functional
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*(-alpha\.[0-9]+)?/
-            branches:
-              ignore: /.*/
-          context: TENTACLIO
