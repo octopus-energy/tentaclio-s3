@@ -11,7 +11,7 @@ AWS_PRIVATE_KEY = "private_key"
 
 @pytest.fixture()
 def fixture_conn():
-    with moto.mock_s3():
+    with moto.mock_aws():
         yield
 
 

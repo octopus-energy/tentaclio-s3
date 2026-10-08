@@ -8,7 +8,7 @@ from tentaclio_s3.clients import exceptions, s3_client
 
 @pytest.fixture()
 def fixture_conn():
-    with moto.mock_s3():
+    with moto.mock_aws():
         yield
 
 
