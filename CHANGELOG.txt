@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5]
+### Added
+ - Support for Python 3.12, 3.13 and 3.14
+ - CI test matrix across Python 3.10 to 3.14
+### Changed
+ - Set minimum dependency versions: tentaclio>=1.3.6, boto3>=1.27
+ - Upgrade moto (dev dependency) to 5.x
+ - Publish to PyPI via GitHub Actions instead of CircleCI
+### Removed
+ - Support for Python 3.9
+
 ## [0.0.4] - 2026-02-06
 Tagged on GitHub but not published to PyPI.
 ### Changed
