@@ -50,9 +50,6 @@ commands:
     steps:
       - configure_github
       - run:
-          name: Install uv
-          command: curl -LsSf https://astral.sh/uv/install.sh | sh && echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
-      - run:
           name: Install Python packages
           command: make sync
       - save_cache:
