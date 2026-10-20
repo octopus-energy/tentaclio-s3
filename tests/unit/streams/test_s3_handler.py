@@ -1,9 +1,8 @@
 import boto3
 import moto
 import pytest
-from tentaclio import api
+from tentaclio import api  # type: ignore
 from tentaclio.urls import URL
-
 
 AWS_PUBLIC_KEY = "public_key"
 AWS_PRIVATE_KEY = "private_key"

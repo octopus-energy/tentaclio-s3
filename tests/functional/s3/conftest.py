@@ -4,7 +4,6 @@ import os
 
 import pytest
 
-
 TEST_BUCKET = "tentaclio-bucket"
 
 S3_TEST_URL = os.getenv("TENTACLIO__CONN__S3_TEST")
