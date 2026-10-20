@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.5]
+## [0.0.6] - 2026-10-17
+### Fixed
+  - Raise the `[build-system]` floor from `setuptools>=61.0` to `setuptools>=77`. The
+    `license = "MIT"` SPDX string (PEP 639) needs setuptools 77+, so building the sdist with an
+    older setuptools and build isolation off failed with an opaque `project.license must be valid
+    exactly by one definition` error (https://github.com/octopus-energy/tentaclio/pull/251).
+
+## [0.0.5] - 2026-10-08
 ### Added
  - Support for Python 3.12, 3.13 and 3.14
  - CI test matrix across Python 3.10 to 3.14
