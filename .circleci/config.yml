@@ -1,23 +1,24 @@
 ---
-# Python CircleCI 2.0 configuration file
+# Python CircleCI configuration file
 #
 # INFO: Check CircleCI documentation for more details
-#       https://circleci.com/docs/2.0/language-python/
+#       https://circleci.com/docs/guides/getting-started/language-python
 
 version: 2.1
 
 executors:
   standard:
     parameters:
-      python_version:
+      python-version:
+        default: "3.11"
         type: string
-        default: "3.14"
     docker:
-      - image: cimg/python:<< parameters.python_version >>
+      - image: cimg/python:<< parameters.python-version >>
         environment:
           TENTACLIO__CONN__S3_TEST: s3://public_key:private_key@tentaclio-bucket
-          UV_PYTHON: << parameters.python_version >>
+          UV_PYTHON: << parameters.python-version >>
     working_directory: "~/lib"
+
 
 # -----------------
 # Reusable commands
@@ -49,69 +50,71 @@ commands:
 
   update_virtualenv:
     parameters:
-      python_version:
+      python-version:
         type: string
     steps:
       - restore_cache:
           keys:
-            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
-            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
-            - virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-
+            - virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-
       - configure_github
       - run:
           name: Install Python packages
           command: make sync
       - save_cache:
-          key: virtualenv-<< parameters.python_version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
+          key: virtualenv-<< parameters.python-version >>-{{ .Environment.CACHE_VERSION }}-{{ .Branch }}-{{ checksum "uv.lock" }}
           paths:
             - "./.venv"
+
 
 jobs:
   lint:
     parameters:
-      python_version:
-        default: "3.14"
+      python-version:
+        default: "3.11"
         type: string
     executor:
       name: standard
-      python_version: << parameters.python_version >>
+      python-version: << parameters.python-version >>
     steps:
       - checkout_source
       - update_virtualenv:
-          python_version: << parameters.python_version >>
+          python-version: << parameters.python-version >>
       - run:
           name: Run Python linter
           command: make lint
 
   unit:
     parameters:
-      python_version:
+      python-version:
         type: string
     executor:
       name: standard
-      python_version: << parameters.python_version >>
+      python-version: << parameters.python-version >>
     steps:
       - checkout_source
       - update_virtualenv:
-          python_version: << parameters.python_version >>
+          python-version: << parameters.python-version >>
       - run:
           name: Run Python unit tests
           command: make unit
 
   functional:
     parameters:
-      python_version:
+      python-version:
         type: string
     executor:
       name: standard
-      python_version: << parameters.python_version >>
+      python-version: << parameters.python-version >>
     steps:
       - checkout_source
       - update_virtualenv:
-          python_version: << parameters.python_version >>
+          python-version: << parameters.python-version >>
       - run:
           name: Run s3 functional tests
           command: make functional
+
 
 workflows:
   version: 2
@@ -123,18 +126,16 @@ workflows:
             tags:
               only: /.*/
       - unit:
-          name: unit-py<< matrix.python_version >>
           matrix:
             parameters:
-              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+              python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
           filters:
             tags:
               only: /.*/
       - functional:
-          name: functional-py<< matrix.python_version >>
           matrix:
             parameters:
-              python_version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+              python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
           filters:
             tags:
               only: /.*/
